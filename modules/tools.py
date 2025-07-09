@@ -1,0 +1,109 @@
+"""一些低耦合的方法"""
+
+import os
+from loguru import logger  # log modules
+import winreg
+import json
+
+
+def get_path() -> str:
+    """
+    获取工坊路径
+    :return: 工坊路径
+    """
+    try:
+        install_path = (
+            winreg.QueryValueEx(
+                winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SoftWare\Valve\Steam"),
+                "SteamPath",
+            )[0]
+            + "/steamapps/workshop/content/431960"
+        )
+        install_path = install_path.replace("/", "\\")
+    except FileNotFoundError:
+        install_path = None
+    finally:
+        logger.info(f"Steam路径: {install_path}")
+        return install_path
+
+
+def _read_json_file(path: list[str]) -> dict[str, dict[str, str]]:
+    """
+    读取壁纸json信息
+    :param path: 所有壁纸的文件夹
+    :return: json文件内的关键信息
+    """
+
+    json_file_ls: list[str] = [
+        os.path.join(i, "project.json") for i in path
+    ]  # 获取Json文件路径
+    # logger.info(f"Json文件路径: {json_file_ls}")
+    res: dict = {}  # 存储壁纸信息 {'文件夹': {'标题': ___, '类型': ___,}}
+    flag: int = 0
+    for i in json_file_ls:
+        # logger.info(f'正在读取{i}的json文件')
+        temp: dict = {}  # 存储读取到的信息
+        with open(i, mode="r", encoding="utf-8") as f:
+            content = json.load(f)  # 读取json文件
+
+        try:
+            temp["title"] = content["title"]  # 读取标题
+            temp["type"] = content["type"]  # 读取类型
+        except KeyError:
+            logger.warning(f"读取{i}时遇到问题, 已跳过")
+            continue
+        else:
+            # logger.info(f"{i} 中的json信息: {temp}")
+            res[path[flag]] = temp  # 存入存储容器中
+        flag += 1
+    # logger.info(f"读取到的json信息:{res}")
+    return res
+
+
+def _get_preview_file(info: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+    """
+    获取预览图片的路径
+    :param info: 所有壁纸的文件夹
+    :return: 新增预览图片路径的字典
+    """
+    for i in info.keys():
+        for j in os.listdir(i):
+            if "preview" in j:
+                # logger.info(f"预览文件地址:{os.path.join(i, j)}")
+                info[i]["preview_img"] = os.path.join(i, j)
+                break
+
+    return info
+
+
+def _get_wp_file(info: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+    """
+    获取壁纸文件本体的路径
+    :param info: 壁纸的信息
+    :return: 含有壁纸文件路径(*.pkg, *.mp4等)的字典
+    """
+    for i in info.keys():
+        for j in os.listdir(i):
+            if j.endswith(".pkg") or j.endswith(".mp4"):
+                info[i]["wpf_path"] = os.path.join(i, j)
+                break
+    return info
+
+
+def get_info(path: str) -> dict[str, dict[str, str]]:
+    """
+    获取壁纸信息
+    :param path: 工坊路径
+    :return: 存储所有壁纸信息的字典，格式如下
+            {文件夹 :{title: 标题,
+            type: 类型
+            preview_img: 预览图片路径
+            wpf_path: 壁纸文件路径}}
+
+    """
+    folders: list = [os.path.join(path, i) for i in os.listdir(path)]  # 壁纸文件夹
+    # logger.info(f"所有文件夹: {folders}")
+    info: dict[str, dict[str, str]] = _read_json_file(folders)  # json中获取到的壁纸信息
+    info = _get_preview_file(info)  # 预览文件路径
+    info = _get_wp_file(info)
+    return info
