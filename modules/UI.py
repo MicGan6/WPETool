@@ -10,17 +10,14 @@ from PIL import Image, ImageTk
 class ImageButton(tk.Button):
     """图片按钮类，继承自Button类"""
 
-    def __init__(self, img: ImageTk.PhotoImage, master: tk.Canvas, x: int, y: int):
+    def __init__(self, img: ImageTk.PhotoImage, master: tk.Canvas):
         """
         :param img: tk格式图片的内存地址
         :param x: 按钮横坐标
         :param y: 按钮纵坐标
         """
         super().__init__(image=img)
-        self.x, self.y = x, y  # 按钮横纵位置
         self.master = master
-        self.place(x=self.x, y=self.y)
-
 
 class ButtonCanvas(tk.Canvas):
     """图片按钮所在的父容器, 继承自Canvas类"""
@@ -91,16 +88,30 @@ class MainWindow(tk.Tk):
                 wpf_path: 壁纸文件路径
                 button: 按钮组件所在内存地址}}
         """
-        flag: int = 1  # 是第几个壁纸
+        flag: int = 1 # 第几个壁纸
+        max_x = 0  # 记录最大x坐标（用于更新scrollregion）
+        max_y = 0  # 记录最大y坐标
         for key, value in self.info.items():
             self.calc_xy(flag=flag)
             logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
-            self.info[key]["button"] = ImageButton(
-                img=value["preview_img"], master=self.button_canvas, x=self.x, y=self.y
+            # 创建按钮（不在这里放置）
+            btn = ImageButton(img=value["preview_img"], master=self.button_canvas)
+            # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
+            self.button_canvas.create_window(
+                self.x, self.y, window=btn, anchor="nw"  # anchor="nw"表示左上角对齐
             )
+            self.info[key]["button"] = btn  # 存储按钮引用
+            # 更新最大x和y（按钮大小100x100，所以最大坐标需加100）
+            current_max_x = self.x + 100
+            current_max_y = self.y + 100
+            if current_max_x > max_x:
+                max_x = current_max_x
+            if current_max_y > max_y:
+                max_y = current_max_y
             flag += 1
 
-        # logger.info(f"信息字典:\n{self.info}")
+        # 所有按钮创建后，更新Canvas的scrollregion为包含所有按钮的区域
+        self.button_canvas.configure(scrollregion=(0, 0, max_x, max_y))
 
     def _deal_image(self, img: str) -> ImageTk.PhotoImage:
         """
@@ -136,7 +147,7 @@ class MainWindow(tk.Tk):
         flag = len(self.info.keys())
         # 得到最后一个按钮的位置
         x: int = 9 * 100
-        y: int = (flag // 9) * 100
+        y: int =((flag - 1) // 9 + 1) * 100
         logger.info(f"Canvas大小: {x,y}")
         self.button_canvas = ButtonCanvas(
             size=(x, y), master=self, scrollbar=self.scrollbar
