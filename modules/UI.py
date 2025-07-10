@@ -1,6 +1,4 @@
-"""
-有关UI的类
-"""
+"""有关UI的类"""
 
 from loguru import logger
 import tkinter as tk
@@ -63,8 +61,7 @@ class MainWindow(tk.Tk):
         self.y: int  # 纵坐标
         self.line: int = 0  # Button在第几行
         self.button_canvas: ButtonCanvas  # 按钮的父容器
-        self.scrollbar: tk.Scrollbar = tk.Scrollbar(master=self, orient=tk.VERTICAL)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.scrollbar: tk.Scrollbar # 滑动条
         self.create_canvas()  # 创建ButtonCanvas
         self.scrollbar.configure(command=self.button_canvas.yview)
         self.geometry("930x800")  # 设置窗口大小
@@ -133,7 +130,9 @@ class MainWindow(tk.Tk):
                 self.line = flag // 9
 
     def create_canvas(self):
-        """计算ButtonCanvas大小"""
+        """创建Canvas和Scrollbar"""
+        self.scrollbar = tk.Scrollbar(master=self, orient=tk.VERTICAL)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         flag = len(self.info.keys())
         # 得到最后一个按钮的位置
         x: int = 9 * 100
@@ -142,3 +141,4 @@ class MainWindow(tk.Tk):
         self.button_canvas = ButtonCanvas(
             size=(x, y), master=self, scrollbar=self.scrollbar
         )
+        self.scrollbar.configure(command=self.button_canvas.yview)

@@ -12,7 +12,7 @@ def get_path() -> str:
     :return: 工坊路径
     """
     try:
-        install_path = (
+        install_path: str = (
             winreg.QueryValueEx(
                 winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SoftWare\Valve\Steam"),
                 "SteamPath",
