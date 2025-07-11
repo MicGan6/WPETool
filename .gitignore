@@ -1,3 +1,5 @@
 ./output
 build.bat
 .idea
+./modules/repkg_dll
+/modules/__pycache__

@@ -10,14 +10,20 @@ from PIL import Image, ImageTk
 class ImageButton(tk.Button):
     """图片按钮类，继承自Button类"""
 
-    def __init__(self, img: ImageTk.PhotoImage, master: tk.Canvas):
+    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str]):
         """
-        :param img: tk格式图片的内存地址
-        :param x: 按钮横坐标
-        :param y: 按钮纵坐标
+        :param img: tk格式预览图的内存地址
+        :param info: 该壁纸的
         """
-        super().__init__(image=img)
-        self.master = master
+        super().__init__(image=img, command=self.show_detail)
+        self.info = info
+    def show_detail(self) -> None:
+        """
+        显示壁纸详细信息窗口
+        :return:
+        """
+        DetailWindow(info=self.info)
+
 
 class ButtonCanvas(tk.Canvas):
     """图片按钮所在的父容器, 继承自Canvas类"""
@@ -42,6 +48,33 @@ class ButtonCanvas(tk.Canvas):
             scrollregion=(0, 0, self.x, self.y),
         )
         self.pack(fill="both", expand=True)
+
+class DetailWindow(tk.Toplevel):
+    """壁纸详细信息窗口"""
+    def __init__(self, info: dict[str, str]):
+        """
+
+        :param info:该壁纸的详细信息
+        """
+        super().__init__()
+        self.geometry('400x400')
+        self.preview_img = info['preview_img'] #预览图片内存地址
+        self.title: str = info['title'] # 壁纸标题
+        self.type: str = info['type'] # 壁纸类型
+        self.img_label: tk.Label #预览图的标签
+        self.title_label: tk.Label
+        self.type_label: tk.Label
+        self.create_label()
+    def create_label(self) -> None:
+        """
+        创建图片和标题
+        """
+        self.img_label = tk.Label(master=self, image=self.preview_img)
+        self.img_label.pack()
+        self.title_lavel = tk.Label(master=self, text=self.title)
+        self.title_lavel.place(y=200)
+        self.type_label = tk.Label(master=self, text=f'类型: {self.type}')
+        self.type_label.place(y=230)
 
 
 class MainWindow(tk.Tk):
@@ -95,7 +128,7 @@ class MainWindow(tk.Tk):
             self.calc_xy(flag=flag)
             logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
             # 创建按钮（不在这里放置）
-            btn = ImageButton(img=value["preview_img"], master=self.button_canvas)
+            btn = ImageButton(img=value["preview_img"], info=value)
             # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
             self.button_canvas.create_window(
                 self.x, self.y, window=btn, anchor="nw"  # anchor="nw"表示左上角对齐
@@ -147,7 +180,7 @@ class MainWindow(tk.Tk):
         flag = len(self.info.keys())
         # 得到最后一个按钮的位置
         x: int = 9 * 100
-        y: int =((flag - 1) // 9 + 1) * 100
+        y: int = (flag // 9) * 100
         logger.info(f"Canvas大小: {x,y}")
         self.button_canvas = ButtonCanvas(
             size=(x, y), master=self, scrollbar=self.scrollbar
