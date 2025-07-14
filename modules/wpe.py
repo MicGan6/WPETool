@@ -1,7 +1,7 @@
 """
 Main Process
 """
-from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL
+from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL, Button
 from PIL import Image, ImageTk
 import modules.tools as tools
 from threading import Thread
@@ -21,9 +21,11 @@ class DetailWindow(Toplevel):
         self.preview_img = info['preview_img'] #预览图片内存地址
         self.title: str = info['title'] # 壁纸标题
         self.type: str = info['type'] # 壁纸类型
+        self.wpf_path: str = info['wpf_path']
         self.img_label: Label #预览图的标签
         self.title_label: Label
         self.type_label: Label
+        self.extract_button: Button
         self.create_label()
     def create_label(self) -> None:
         """
@@ -35,15 +37,18 @@ class DetailWindow(Toplevel):
         self.title_lavel.place(y=200)
         self.type_label = Label(master=self, text=f'类型: {self.type}')
         self.type_label.place(y=230)
+        self.extract_button = Button(master=self, text='导出', command=self.extract)
+        self.extract_button.place(y=250)
+    def extract(self):
+        if self.type == 'scene':
+            tools.extract_pkg(self.wpf_path, self.title)
 
 class WPEApplication(Tk):
     """主进程"""
 
     def __init__(self):
-        """
-        :param info: 壁纸信息的字典
-        """
         super().__init__()  # 调用tkinter.TK的构造函数
+        self.info: dict[str, dict[str, str]]
         # 计算Button坐标时要用到的变量
         self.x: int  # 横坐标
         self.y: int  # 纵坐标
@@ -51,7 +56,7 @@ class WPEApplication(Tk):
         self.button_canvas: UI.ButtonCanvas  # 按钮的父容器
         self.scrollbar: Scrollbar # 滑动条
         self.loading_label: Label # 加载中文字
-        UI.Center(self, 1200, 700, -50)  # 居中 1200 * 700 向上偏移 50 窗口
+        UI.Center(self, 970, 700, -50)  # 居中 970 * 700 向上偏移 50 窗口
         self.title("Wallpaper Engine: 壁纸引擎 第三方工具")
         self.resizable(False, False)
         self.loading_ui()
@@ -118,7 +123,7 @@ class WPEApplication(Tk):
             self.calc_xy(flag=flag)
             logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
             # 创建按钮（不在这里放置）
-            btn = UI.ImageButton(img=value["preview_img"], command=lambda: DetailWindow(value))
+            btn = UI.ImageButton(img=value["preview_img"], info=value)
             # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
             self.button_canvas.create_window(
                 self.x, self.y, window=btn, anchor="nw"  # anchor="nw"表示左上角对齐

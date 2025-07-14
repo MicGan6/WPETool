@@ -11,3 +11,4 @@ modules/repkg_src/RePKG.Application/obj
 modules/repkg_src/RePKG.Core/bin
 modules/repkg_src/RePKG.Core/obj
 modules/repkg_src/RePKG.Tests/obj
+output/

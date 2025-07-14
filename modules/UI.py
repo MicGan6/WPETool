@@ -2,19 +2,24 @@
 
 from tkinter import Button, Tk, Scrollbar, Canvas
 from PIL import ImageTk
-
-
+from modules.wpe import DetailWindow
 class ImageButton(Button):
     """图片按钮类，继承自Button类"""
 
-    def __init__(self, img: ImageTk.PhotoImage, command: callable = lambda: None):
+    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str]):
         """
         :param img: tk格式预览图的内存地址
-        :param info: 该壁纸的
+        :param info: 该壁纸的信息
         """
-        super().__init__(image=img, command=command)
+        self.info = info
+        super().__init__(image=img, command=self.command)
 
-
+    def command(self) -> None:
+        """
+        创建详细信息窗口
+        :return:
+        """
+        DetailWindow(self.info)
 class ButtonCanvas(Canvas):
     """图片按钮所在的父容器, 继承自Canvas类"""
 
