@@ -1,0 +1,3 @@
+[submodule "modules/repkg_src"]
+	path = modules/repkg_src
+	url = https://github.com/notscuffed/repkg.git
