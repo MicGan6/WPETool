@@ -74,15 +74,12 @@ def _read_json_file(path: list[str]) -> dict[str, dict[str, str]]:
         with open(i, mode="r", encoding="utf-8") as f:
             content = json.load(f)  # 读取json文件
 
-        try:
+        if "title" in content and "type" in content:
             temp["title"] = content["title"]  # 读取标题
             temp["type"] = content["type"]  # 读取类型
-        except KeyError:
-            logger.warning(f"读取{i}时遇到问题, 已跳过")
-            # continue
-        else:
-            # logger.info(f"{i} 中的json信息: {temp}")
             res[path[flag]] = temp  # 存入存储容器中
+        else:
+            logger.warning(f"读取{i}时遇到问题, 已跳过")
         flag += 1
     # logger.info(f"读取到的json信息:{res}")
     return res
