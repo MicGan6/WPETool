@@ -3,6 +3,8 @@
 from tkinter import Button, Tk, Scrollbar, Canvas
 from PIL import ImageTk
 from modules.wpe import DetailWindow
+
+
 class ImageButton(Button):
     """图片按钮类，继承自Button类"""
 
@@ -20,6 +22,8 @@ class ImageButton(Button):
         :return:
         """
         DetailWindow(self.info)
+
+
 class ButtonCanvas(Canvas):
     """图片按钮所在的父容器, 继承自Canvas类"""
 
@@ -44,5 +48,8 @@ class ButtonCanvas(Canvas):
         )
         self.pack(fill="both", expand=True)
 
+
 def Center(root: Tk, width: int, height: int, office: int = 0):
-    root.geometry(f"{width}x{height}+{(root.winfo_screenwidth()-width)//2}+{(root.winfo_screenheight()-height)//2+office}")
+    root.geometry(
+        f"{width}x{height}+{(root.winfo_screenwidth()-width)//2}+{(root.winfo_screenheight()-height)//2+office}"
+    )

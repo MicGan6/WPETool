@@ -1,6 +1,7 @@
 """
 Main Process
 """
+
 from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL, Button
 from PIL import Image, ImageTk
 import modules.tools as tools
@@ -12,21 +13,23 @@ import time
 
 class DetailWindow(Toplevel):
     """壁纸详细信息窗口"""
+
     def __init__(self, info: dict[str, str]):
         """
         :param info:该壁纸的详细信息
         """
         super().__init__()
-        UI.Center(self, 500, 400) # 居中 500 * 400 窗口
-        self.preview_img = info['preview_img'] #预览图片内存地址
-        self.title: str = info['title'] # 壁纸标题
-        self.type: str = info['type'] # 壁纸类型
-        self.wpf_path: str = info['wpf_path']
-        self.img_label: Label #预览图的标签
+        UI.Center(self, 500, 400)  # 居中 500 * 400 窗口
+        self.preview_img = info["preview_img"]  # 预览图片内存地址
+        self.title: str = info["title"]  # 壁纸标题
+        self.type: str = info["type"]  # 壁纸类型
+        self.wpf_path: str = info["wpf_path"]
+        self.img_label: Label  # 预览图的标签
         self.title_label: Label
         self.type_label: Label
         self.extract_button: Button
         self.create_label()
+
     def create_label(self) -> None:
         """
         创建图片和标题
@@ -35,13 +38,17 @@ class DetailWindow(Toplevel):
         self.img_label.pack()
         self.title_lavel = Label(master=self, text=self.title)
         self.title_lavel.place(y=200)
-        self.type_label = Label(master=self, text=f'类型: {self.type}')
+        self.type_label = Label(master=self, text=f"类型: {self.type}")
         self.type_label.place(y=230)
-        self.extract_button = Button(master=self, text='导出', command=self.extract)
+        self.extract_button = Button(master=self, text="导出", command=self.extract)
         self.extract_button.place(y=250)
+
     def extract(self):
-        if self.type == 'scene':
+        if self.type == "scene":
             tools.extract_pkg(self.wpf_path, self.title)
+        if self.type == "video":
+            tools.extract_mp4(self.wpf_path, self.title)
+
 
 class WPEApplication(Tk):
     """主进程"""
@@ -54,16 +61,16 @@ class WPEApplication(Tk):
         self.y: int  # 纵坐标
         self.line: int = 0  # Button在第几行
         self.button_canvas: UI.ButtonCanvas  # 按钮的父容器
-        self.scrollbar: Scrollbar # 滑动条
-        self.loading_label: Label # 加载中文字
+        self.scrollbar: Scrollbar  # 滑动条
+        self.loading_label: Label  # 加载中文字
         UI.Center(self, 970, 700, -50)  # 居中 970 * 700 向上偏移 50 窗口
         self.title("Wallpaper Engine: 壁纸引擎 第三方工具")
         self.resizable(False, False)
         self.loading_ui()
-        #self.after(10, self.setup)
+        # self.after(10, self.setup)
         thr = Thread(target=self.setup)
         thr.start()
-        #self.setup()
+        # self.setup()
         self.mainloop()  # 启动！（保持主进程循环）
 
     def loading_ui(self):
@@ -85,7 +92,7 @@ class WPEApplication(Tk):
         """
         self.path: str = tools.get_path()
         self.info: dict[str, dict[str, str]] = tools.get_info(self.path)
-        logger.info(f"tools info: {self.info}")
+        # logger.info(f"tools info: {self.info}")
         time.sleep(5)
         self.after(1, self.loading_label.destroy)
         self.after(100, self.setup_ui)
@@ -116,12 +123,12 @@ class WPEApplication(Tk):
                 wpf_path: 壁纸文件路径
                 button: 按钮组件所在内存地址}}
         """
-        flag: int = 1 # 第几个壁纸
+        flag: int = 1  # 第几个壁纸
         max_x = 0  # 记录最大x坐标（用于更新scrollregion）
         max_y = 0  # 记录最大y坐标
         for key, value in self.info.items():
             self.calc_xy(flag=flag)
-            logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
+            # logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
             # 创建按钮（不在这里放置）
             btn = UI.ImageButton(img=value["preview_img"], info=value)
             # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
@@ -147,7 +154,7 @@ class WPEApplication(Tk):
         :param img: 预览图片路径
         :return: tk格式的预览图地址
         """
-        logger.info(f"识别图片地址：{img}")
+        # logger.info(f"识别图片地址：{img}")
         image = Image.open(img)
         image = ImageTk.PhotoImage(
             image.resize((100, 100))

@@ -4,19 +4,30 @@ import os
 from loguru import logger  # log modules
 import winreg
 import json
-import clr # C# dll
+import clr  # C# dll
 from tkinter import messagebox
 import sys
+import shutil
+
+
 def pre_check() -> None:
     """
     检查依赖
     :return:
     """
-    if not os.path.exists(f'{os.getcwd()}\\output'):
-        os.mkdir(f'{os.getcwd()}\\output')
-    if not os.path.exists(f'{os.getcwd()}\\modules\\repkg_dll') or len(os.listdir(f'{os.getcwd()}\\modules\\repkg_dll')) != 17:
-        ask = messagebox.showerror('环境检测', '所需的依赖项(RePKG.dll等文件)不完整, 如果您使用源码，请运行repkg_build.bat, 如果您是exe文件用户，请重新下载程序')
-        sys.exit('RePKG module Not Found')
+    if not os.path.exists(f"{os.getcwd()}\\output"):
+        os.mkdir(f"{os.getcwd()}\\output")
+    if (
+        not os.path.exists(f"{os.getcwd()}\\modules\\repkg_dll")
+        or len(os.listdir(f"{os.getcwd()}\\modules\\repkg_dll")) != 17
+    ):
+        ask = messagebox.showerror(
+            "环境检测",
+            "所需的依赖项(RePKG.dll等文件)不完整, 如果您使用源码，请运行repkg_build.bat, 如果您是exe文件用户，请重新下载程序",
+        )
+        sys.exit("RePKG module Not Found")
+
+
 def get_path() -> str:
     """
     获取工坊路径和工作目录
@@ -33,8 +44,10 @@ def get_path() -> str:
         )
         install_path = install_path.replace("/", "\\")
     except FileNotFoundError:
-        messagebox.showerror('错误', '未检测到Wallpaper Engine已安装，请检查是否正确安装')
-        sys.exit('WPE Not Found')
+        messagebox.showerror(
+            "错误", "未检测到Wallpaper Engine已安装，请检查是否正确安装"
+        )
+        sys.exit("WPE Not Found")
     else:
         logger.info(f"Steam路径: {install_path}")
         return install_path
@@ -120,28 +133,53 @@ def get_info(path: str) -> dict[str, dict[str, str]]:
     info = _get_preview_file(info)  # 预览文件路径
     info = _get_wp_file(info)
     return info
+
+
 def _mkpath(title: str) -> str:
     """
     创建壁纸导出的目录并返回该路径
     :param title: 壁纸名字
     :return: 壁纸导出路径
     """
-    title = title.replace('|', '_').replace(':', '_').replace('<', '_').replace('>', '_').replace('*', '_').replace(':', '_').replace('?', '_')
-    path = os.getcwd() + '\\output' + f'\\{title}'
+    title = (
+        title.replace("|", "_")
+        .replace(":", "_")
+        .replace("<", "_")
+        .replace(">", "_")
+        .replace("*", "_")
+        .replace(":", "_")
+        .replace("?", "_")
+        .replace("\\", "_")
+        .replace("/", "_")
+    )
+    path = os.getcwd() + "\\output" + f"\\{title}"
     os.mkdir(path)
     return path
-def extract_pkg(path:str, title:str) -> None:
+
+
+def extract_pkg(path: str, title: str) -> None:
     """
     导出scene类型的壁纸
     :param title: 壁纸的名字
     :param path: 壁纸文件路径
     :return:
     """
-    logger.info(f'工作目录:{os.getcwd()}')
-    clr.AddReference(os.getcwd() + '\\modules\\repkg_dll\\RePKG.dll')
+    # logger.info(f"工作目录:{os.getcwd()}")
+    clr.AddReference(os.getcwd() + "\\modules\\repkg_dll\\RePKG.dll")
     from RePKG.Command import Extract, ExtractOptions
+
     options = ExtractOptions()
     options.Input = path
 
     options.OutputDirectory = _mkpath(title)
     Extract.Action(options)
+
+
+def extract_mp4(path: str, title: str) -> None:
+    """
+    导出视频类壁纸
+    :param path: 壁纸文件路径
+    :param title: 壁纸标题
+    :return:
+    """
+    shutil.move(path, _mkpath(title))
