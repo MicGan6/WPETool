@@ -8,11 +8,12 @@ from modules.wpe import DetailWindow
 class ImageButton(Button):
     """图片按钮类，继承自Button类"""
 
-    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str]):
+    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str], path:str):
         """
         :param img: tk格式预览图的内存地址
         :param info: 该壁纸的信息
         """
+        self.path = path
         self.info = info
         super().__init__(image=img, command=self.command)
 
@@ -21,7 +22,7 @@ class ImageButton(Button):
         创建详细信息窗口
         :return:
         """
-        DetailWindow(self.info)
+        DetailWindow(path = self.path, info=self.info)
 
 
 class ButtonCanvas(Canvas):

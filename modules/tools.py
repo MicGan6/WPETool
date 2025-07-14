@@ -23,7 +23,9 @@ def pre_check() -> None:
     ):
         ask = messagebox.showerror(
             "环境检测",
-            "所需的依赖项(RePKG.dll等文件)不完整, 如果您使用源码，请运行repkg_build.bat, 如果您是exe文件用户，请重新下载程序",
+            "所需的依赖项(RePKG.dll等文件)不完整,解决办法:\n"
+            "1.如果您使用源码，请运行repkg_build.bat\n"
+            "2.如果您使编译版程序(exe文件)，请重新下载程序",
         )
         sys.exit("RePKG module Not Found")
 
@@ -45,7 +47,7 @@ def get_path() -> str:
         install_path = install_path.replace("/", "\\")
     except FileNotFoundError:
         messagebox.showerror(
-            "错误", "未检测到Wallpaper Engine已安装，请检查是否正确安装"
+            "错误", "未检测到Wallpaper Engine安装路径，请检查是否正确安装"
         )
         sys.exit("WPE Not Found")
     else:
@@ -77,7 +79,7 @@ def _read_json_file(path: list[str]) -> dict[str, dict[str, str]]:
             temp["type"] = content["type"]  # 读取类型
         except KeyError:
             logger.warning(f"读取{i}时遇到问题, 已跳过")
-            continue
+            # continue
         else:
             # logger.info(f"{i} 中的json信息: {temp}")
             res[path[flag]] = temp  # 存入存储容器中

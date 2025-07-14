@@ -2,7 +2,7 @@
 Main Process
 """
 
-from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL, Button
+from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL, Button, messagebox
 from PIL import Image, ImageTk
 import modules.tools as tools
 from threading import Thread
@@ -14,16 +14,18 @@ import time
 class DetailWindow(Toplevel):
     """壁纸详细信息窗口"""
 
-    def __init__(self, info: dict[str, str]):
+    def __init__(self, path:str, info: dict[str, str]):
         """
+        :param path: 壁纸所在文件夹
         :param info:该壁纸的详细信息
         """
         super().__init__()
+        self.path = path
         UI.Center(self, 500, 400)  # 居中 500 * 400 窗口
         self.preview_img = info["preview_img"]  # 预览图片内存地址
         self.title: str = info["title"]  # 壁纸标题
         self.type: str = info["type"]  # 壁纸类型
-        self.wpf_path: str = info["wpf_path"]
+        self.wpf_path: str = info.get("wpf_path", None)
         self.img_label: Label  # 预览图的标签
         self.title_label: Label
         self.type_label: Label
@@ -34,6 +36,7 @@ class DetailWindow(Toplevel):
         """
         创建图片和标题
         """
+        logger.info(f'所选壁纸信息{self.path}')
         self.img_label = Label(master=self, image=self.preview_img)
         self.img_label.pack()
         self.title_lavel = Label(master=self, text=self.title)
@@ -44,10 +47,14 @@ class DetailWindow(Toplevel):
         self.extract_button.place(y=250)
 
     def extract(self):
-        if self.type == "scene":
-            tools.extract_pkg(self.wpf_path, self.title)
-        if self.type == "video":
-            tools.extract_mp4(self.wpf_path, self.title)
+        if self.wpf_path != None:
+            if self.type == "scene" :
+                tools.extract_pkg(self.wpf_path, self.title)
+            elif self.type == "video":
+                tools.extract_mp4(self.wpf_path, self.title)
+        else:
+            messagebox.showwarning('警告', '未找到该壁纸本体文件，无法导出')
+
 
 
 class WPEApplication(Tk):
@@ -130,7 +137,7 @@ class WPEApplication(Tk):
             self.calc_xy(flag=flag)
             # logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
             # 创建按钮（不在这里放置）
-            btn = UI.ImageButton(img=value["preview_img"], info=value)
+            btn = UI.ImageButton(img=value["preview_img"], path = key, info=value)
             # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
             self.button_canvas.create_window(
                 self.x, self.y, window=btn, anchor="nw"  # anchor="nw"表示左上角对齐
