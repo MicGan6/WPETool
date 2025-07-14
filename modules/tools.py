@@ -86,32 +86,20 @@ def _read_json_file(path: list[str]) -> dict[str, dict[str, str]]:
     return res
 
 
-def _get_preview_file(info: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+def _get_files(info: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
     """
-    获取预览图片的路径
-    :param info: 所有壁纸的文件夹
-    :return: 新增预览图片路径的字典
+    获取预览图片和壁纸本体的路径
+    :param info: 存储壁纸信息的字典
+    :return: 更新后的字典
     """
-    for i in info.keys():
-        for j in os.listdir(i):
-            if "preview" in j:
-                # logger.info(f"预览文件地址:{os.path.join(i, j)}")
-                info[i]["preview_img"] = os.path.join(i, j)
-                break
-
-    return info
-
-
-def _get_wp_file(info: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
-    """
-    获取壁纸文件本体的路径
-    :param info: 壁纸的信息
-    :return: 含有壁纸文件路径(*.pkg, *.mp4等)的字典
-    """
-    for i in info.keys():
-        for j in os.listdir(i):
-            if j.endswith(".pkg") or j.endswith(".mp4"):
-                info[i]["wpf_path"] = os.path.join(i, j)
+    for folder in info.keys():
+        for file in os.listdir(folder):
+            if "preview" in file:  # 读取预览图
+                info[folder]["preview_img"] = os.path.join(folder, file)
+            elif file.endswith(".pkg") or file.endswith(".mp4"):  # 壁纸本体
+                info[folder]["wpf_path"] = os.path.join(folder, file)
+            # 如果两个都找到了，可以提前退出当前文件夹的遍历
+            if "preview_img" in info[folder] and "wpf_path" in info[folder]:
                 break
     return info
 
@@ -130,8 +118,7 @@ def get_info(path: str) -> dict[str, dict[str, str]]:
     folders: list = [os.path.join(path, i) for i in os.listdir(path)]  # 壁纸文件夹
     # logger.info(f"所有文件夹: {folders}")
     info: dict[str, dict[str, str]] = _read_json_file(folders)  # json中获取到的壁纸信息
-    info = _get_preview_file(info)  # 预览文件路径
-    info = _get_wp_file(info)
+    info = _get_files(info)
     return info
 
 
@@ -165,14 +152,14 @@ def extract_pkg(path: str, title: str) -> None:
     :return:
     """
     # logger.info(f"工作目录:{os.getcwd()}")
-    clr.AddReference(os.getcwd() + "\\modules\\repkg_dll\\RePKG.dll")
+    clr.AddReference(os.getcwd() + "\\modules\\repkg_dll\\RePKG.dll")  # 引用dll
     from RePKG.Command import Extract, ExtractOptions
 
-    options = ExtractOptions()
-    options.Input = path
-
-    options.OutputDirectory = _mkpath(title)
-    Extract.Action(options)
+    options = ExtractOptions()  # 导出选项类
+    # 设置导出属性
+    options.Input = path  # *.pkg文件路径
+    options.OutputDirectory = _mkpath(title)  # 导出路径
+    Extract.Action(options)  # 开始导出
 
 
 def extract_mp4(path: str, title: str) -> None:
@@ -182,4 +169,4 @@ def extract_mp4(path: str, title: str) -> None:
     :param title: 壁纸标题
     :return:
     """
-    shutil.move(path, _mkpath(title))
+    shutil.move(path, _mkpath(title))  # 看什么看啊, *.mp4直接复制不就行了awa
