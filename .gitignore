@@ -1,5 +1,5 @@
 .git
-output
+build
 build.bat
 .idea
 modules/repkg_dll
@@ -12,3 +12,4 @@ modules/repkg_src/RePKG.Core/bin
 modules/repkg_src/RePKG.Core/obj
 modules/repkg_src/RePKG.Tests/obj
 output/
+/config.json

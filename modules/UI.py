@@ -8,7 +8,7 @@ from modules.wpe import DetailWindow
 class ImageButton(Button):
     """图片按钮类，继承自Button类"""
 
-    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str], path:str):
+    def __init__(self, img: ImageTk.PhotoImage, info: dict[str, str], path: str):
         """
         :param img: tk格式预览图的内存地址
         :param info: 该壁纸的信息
@@ -22,7 +22,7 @@ class ImageButton(Button):
         创建详细信息窗口
         :return:
         """
-        DetailWindow(path = self.path, info=self.info)
+        DetailWindow(path=self.path, info=self.info)
 
 
 class ButtonCanvas(Canvas):
@@ -47,7 +47,10 @@ class ButtonCanvas(Canvas):
             yscrollincrement=10,
             scrollregion=(0, 0, self.x, self.y),
         )
+        self.bind("<mouse_wheel>", self.on_mousewheel)
         self.pack(fill="both", expand=True)
+    def on_mousewheel(self, event):
+        self.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
 
 def Center(root: Tk, width: int, height: int, office: int = 0):

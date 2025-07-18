@@ -2,8 +2,22 @@
 Main Process
 """
 
-from tkinter import Toplevel, Tk, Label, Scrollbar, X, Y, LEFT, RIGHT, VERTICAL, Button, messagebox
+from tkinter import (
+    Toplevel,
+    Tk,
+    Label,
+    Scrollbar,
+    X,
+    Y,
+    LEFT,
+    RIGHT,
+    VERTICAL,
+    Button,
+    messagebox,
+)
 from PIL import Image, ImageTk
+from PIL.ImageChops import offset
+
 import modules.tools as tools
 from threading import Thread
 from loguru import logger
@@ -14,7 +28,7 @@ import time
 class DetailWindow(Toplevel):
     """壁纸详细信息窗口"""
 
-    def __init__(self, path:str, info: dict[str, str]):
+    def __init__(self, path: str, info: dict[str, str]):
         """
         :param path: 壁纸所在文件夹
         :param info:该壁纸的详细信息
@@ -36,7 +50,7 @@ class DetailWindow(Toplevel):
         """
         创建图片和标题
         """
-        logger.info(f'所选壁纸信息{self.path}')
+        logger.info(f"所选壁纸信息{self.path}")
         self.img_label = Label(master=self, image=self.preview_img)
         self.img_label.pack()
         self.title_lavel = Label(master=self, text=self.title)
@@ -48,30 +62,38 @@ class DetailWindow(Toplevel):
 
     def extract(self):
         if self.wpf_path != None:
-            if self.type == "scene" :
+            if self.type == "scene":
                 tools.extract_pkg(self.wpf_path, self.title)
             elif self.type == "video":
                 tools.extract_mp4(self.wpf_path, self.title)
         else:
-            messagebox.showwarning('警告', '未找到该壁纸本体文件，无法导出')
-
+            messagebox.showwarning("警告", "未找到该壁纸本体文件，无法导出")
 
 
 class WPEApplication(Tk):
     """主进程"""
 
-    def __init__(self):
+    def __init__(self, width: int, height: int, line_sum: int, workshop_path:str):
+        """
+        构造函数
+        :param width: 窗口宽
+        :param height: 窗口高
+        :param line_sum: 单行显示的壁纸数量
+        :param workshop_path: Workshop路径
+        """
         super().__init__()  # 调用tkinter.TK的构造函数
-        self.info: dict[str, dict[str, str]]
+        self.info: dict[str, dict[str, str]] # 壁纸信息
+        self.workshop_path: str = workshop_path
         # 计算Button坐标时要用到的变量
+        self.line_sum: int = line_sum
         self.x: int  # 横坐标
         self.y: int  # 纵坐标
         self.line: int = 0  # Button在第几行
         self.button_canvas: UI.ButtonCanvas  # 按钮的父容器
         self.scrollbar: Scrollbar  # 滑动条
         self.loading_label: Label  # 加载中文字
-        UI.Center(self, 970, 700, -50)  # 居中 970 * 700 向上偏移 50 窗口
-        self.title("Wallpaper Engine: 壁纸引擎 第三方工具")
+        UI.Center(root=self, width=width, height=height, office=-50)  # 居中 970 * 700 向上偏移 50 窗口
+        self.title("WPETool")
         self.resizable(False, False)
         self.loading_ui()
         # self.after(10, self.setup)
@@ -97,8 +119,7 @@ class WPEApplication(Tk):
                 preview_img: 预览图片
                 wpf_path: 壁纸文件路径}}
         """
-        self.path: str = tools.get_path()
-        self.info: dict[str, dict[str, str]] = tools.get_info(self.path)
+        self.info: dict[str, dict[str, str]] = tools.get_info(self.workshop_path)
         # logger.info(f"tools info: {self.info}")
         time.sleep(5)
         self.after(1, self.loading_label.destroy)
@@ -137,7 +158,7 @@ class WPEApplication(Tk):
             self.calc_xy(flag=flag)
             # logger.info(f"flag:{flag}, x: {self.x}, y: {self.y}")
             # 创建按钮（不在这里放置）
-            btn = UI.ImageButton(img=value["preview_img"], path = key, info=value)
+            btn = UI.ImageButton(img=value["preview_img"], path=key, info=value)
             # 用Canvas的create_window将按钮嵌入Canvas，坐标为(self.x, self.y)
             self.button_canvas.create_window(
                 self.x, self.y, window=btn, anchor="nw"  # anchor="nw"表示左上角对齐
@@ -168,6 +189,7 @@ class WPEApplication(Tk):
         )  # 将图片类型适应tkinter并设置大小
         return image
 
+
     def calc_xy(self, flag: int) -> None:
         """
         计算按钮横纵坐标
@@ -176,12 +198,12 @@ class WPEApplication(Tk):
         if flag == 1:
             self.x, self.y, self.line = 0, 0, 0
         else:
-            if flag // 9 <= self.line or flag % 9 == 0:
+            if flag // self.line_sum <= self.line or flag % self.line_sum == 0:
                 self.x += 100
-            elif flag // 9 > self.line:
+            elif flag // self.line_sum > self.line:
                 self.x = 0
                 self.y += 100
-                self.line = flag // 9
+                self.line = flag // self.line_sum
 
     def create_canvas(self):
         """创建Canvas和Scrollbar"""

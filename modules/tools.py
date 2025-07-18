@@ -5,9 +5,10 @@ from loguru import logger  # log modules
 import winreg
 import json
 import clr  # C# dll
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import sys
 import shutil
+import json
 
 
 def pre_check() -> None:
@@ -15,12 +16,14 @@ def pre_check() -> None:
     检查依赖
     :return:
     """
-    if not os.path.exists(f"{os.getcwd()}\\output"):
+    if not os.path.exists(f"{os.getcwd()}\\config.json"):  # 检查config是否存在
+        _create_config()
+    if not os.path.exists(f"{os.getcwd()}\\output"):  # 检查输出目录
         os.mkdir(f"{os.getcwd()}\\output")
     if (
         not os.path.exists(f"{os.getcwd()}\\modules\\repkg_dll")
         or len(os.listdir(f"{os.getcwd()}\\modules\\repkg_dll")) != 17
-    ):
+    ):  # 检查repkg.dll等文件是否存在
         ask = messagebox.showerror(
             "环境检测",
             "所需的依赖项(RePKG.dll等文件)不完整,解决办法:\n"
@@ -28,16 +31,50 @@ def pre_check() -> None:
             "2.如果您使编译版程序(exe文件)，请重新下载程序",
         )
         sys.exit("RePKG module Not Found")
+    if not os.path.exists(read_config()['Regular']['workshop_path']): # 检查workshop路径是否存在
+        _get_path()
 
 
-def get_path() -> str:
+def _check_config(config) -> bool:
+    """
+    检查config完整性
+    :param config: config信息
+    :return: 是否完整
+    """
+    if "workshop_path" not in config["Regular"]:
+        return False
+    elif (
+        "width" not in config["UI"]
+        or "height" not in config["UI"]
+        or "line_sum" not in config["UI"]
+    ):
+        return False
+    else:
+        return True
+
+
+def read_config() -> dict[str, dict[str, str | int]]:
+    """
+    读取config
+    :return: config
+    """
+    with open(file="config.json", mode="r", encoding="utf-8") as file:
+        config: dict[str, dict[str, str | int]] = json.load(file)
+        if _check_config(config):
+            return config
+        else:
+            _create_config()
+            return read_config()
+
+
+def _get_path() -> str | None:
     """
     获取工坊路径和工作目录
     :return: 工坊路径
     """
-
+    install_path: str = ""
     try:
-        install_path: str = (
+        install_path = (  # winreg获取工坊路径
             winreg.QueryValueEx(
                 winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"SoftWare\Valve\Steam"),
                 "SteamPath",
@@ -45,14 +82,40 @@ def get_path() -> str:
             + "/steamapps/workshop/content/431960"
         )
         install_path = install_path.replace("/", "\\")
+
     except FileNotFoundError:
-        messagebox.showerror(
-            "错误", "未检测到Wallpaper Engine安装路径，请检查是否正确安装"
-        )
-        sys.exit("WPE Not Found")
+        while not os.path.exists(install_path):  # 如果安装路径不存在，询问路径
+            install_path = simpledialog.askstring(
+                "WPETool-工坊路径",
+                "对不起，程序无法自动读取工坊路径，请手动输入(留空以退出程序)",
+            )
+            if install_path is None:
+                sys.exit("Workshop Path Do Not Get")
+            install_path = install_path.replace("/", "\\")
     else:
-        logger.info(f"Steam路径: {install_path}")
+        while not os.path.exists(install_path):  # 如果安装路径不存在，询问路径
+            install_path = simpledialog.askstring(
+                "WPETool-工坊路径",
+                "对不起，程序自动读取读取到工坊路径不存在，请手动输入(留空以退出程序)",
+            )
+            if install_path == None:
+                sys.exit("Workshop Path Not Found")
+            install_path = install_path.replace("/", "\\")
+        logger.info(f"WPE Workshop路径: {install_path}")
         return install_path
+
+
+def _create_config() -> None:
+    """
+    创建config
+    """
+    workshop_path: str = _get_path()
+    info: dict[str, dict[str, str | int]] = {
+        "Regular": {"workshop_path": workshop_path},
+        "UI": {"width": 970, "height": 500, "line_sum": 9},
+    }
+    with open(file="config.json", mode="w", encoding="utf-8") as file:
+        json.dump(info, file, indent=4)
 
 
 def _read_json_file(path: list[str]) -> dict[str, dict[str, str]]:
