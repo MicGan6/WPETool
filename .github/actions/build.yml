@@ -1,0 +1,28 @@
+name: 编译项目
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  windows:
+    if: contains(github.event.head_commit.message, '[不构建]') == false
+    runs-on: windows-latest
+    steps:
+      - name: 结算仓库
+        uses: actions/checkout@v2
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+      - name: 编译程序
+        run: |
+          nui
+      - name: 复制资源文件
+        run: |
+          xcopy .\ico\ .\dist\pynotepad\ico\ /s /e
+          xcopy .\lang\ .\dist\pynotepad\lang\ /s /e
+          xcopy .\plugins\ .\dist\pynotepad\plugins\ /s /e
+      - name: 上传打包项目
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pynotepad
+          path: .\dist\pynotepad\
